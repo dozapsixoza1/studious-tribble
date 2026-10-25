@@ -1,0 +1,55 @@
+name: Build libsamp
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unpack sources
+        run: unzip -q src.zip
+
+      - name: Patch sources
+        run: |
+          cd src
+          # регистр папки RakNet (Android.mk и include ждут RakNet)
+          mv vendor/raknet vendor/RakNet
+          # сервер Flin RP
+          sed -i 's|^const auto encryptedAddress = .*|const char* encryptedAddress_plain = "51.75.44.14";|' main.cpp
+          sed -i 's|encryptedAddress\.decrypt()|encryptedAddress_plain|' main.cpp
+          sed -i 's|^unsigned short port = 7777;|unsigned short port = 3322;|' main.cpp
+          # в архиве нет cheatgui.h, делаем заглушку
+          cat > cheatgui.h << 'EOF'
+          #pragma once
+          class CCheatGUI {
+          public:
+              CCheatGUI() {}
+              void Render() {}
+              void ToggleRender() {}
+              bool GetStatus() { return false; }
+              void SetStatus(bool) {}
+          };
+          EOF
+
+      - name: Install NDK r17c
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip
+          unzip -q android-ndk-r17c-linux-x86_64.zip
+          echo "NDK=$PWD/android-ndk-r17c" >> $GITHUB_ENV
+
+      - name: Build libsamp.so
+        run: |
+          $NDK/ndk-build -j$(nproc) \
+            NDK_PROJECT_PATH=$PWD \
+            APP_BUILD_SCRIPT=$PWD/src/Android.mk \
+            NDK_APPLICATION_MK=$PWD/src/Application.mk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libsamp
+          path: libs/armeabi-v7a/libsamp.so
