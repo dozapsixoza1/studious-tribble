@@ -17,13 +17,10 @@ jobs:
       - name: Patch sources
         run: |
           cd src
-          # регистр папки RakNet (Android.mk и include ждут RakNet)
           mv vendor/raknet vendor/RakNet
-          # сервер Flin RP
           sed -i 's|^const auto encryptedAddress = .*|const char* encryptedAddress_plain = "51.75.44.14";|' main.cpp
           sed -i 's|encryptedAddress\.decrypt()|encryptedAddress_plain|' main.cpp
           sed -i 's|^unsigned short port = 7777;|unsigned short port = 3322;|' main.cpp
-          # в архиве нет cheatgui.h, делаем заглушку
           cat > cheatgui.h << 'EOF'
           #pragma once
           class CCheatGUI {
@@ -35,6 +32,11 @@ jobs:
               void SetStatus(bool) {}
           };
           EOF
+
+      - name: Fix libtinfo for old NDK
+        run: |
+          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+          sudo ldconfig
 
       - name: Install NDK r17c
         run: |
