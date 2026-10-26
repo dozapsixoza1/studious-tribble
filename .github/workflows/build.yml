@@ -19,9 +19,9 @@ jobs:
           cd src
           mv vendor/raknet vendor/RakNet
           sed -i 's|#include "CheckFileHash.h"|#include "checkfilehash.h"|' checkfilehash.cpp
-          sed -i 's|^const auto encryptedAddress = .*|const char* encryptedAddress_plain = "51.75.44.14";|' main.cpp
+          sed -i 's|^const auto encryptedAddress = .*|const char* encryptedAddress_plain = "188.127.241.74";|' main.cpp
           sed -i 's|encryptedAddress\.decrypt()|encryptedAddress_plain|' main.cpp
-          sed -i 's|^unsigned short port = 7777;|unsigned short port = 3322;|' main.cpp
+          sed -i 's|^unsigned short port = 7777;|unsigned short port = 4170;|' main.cpp
           cat > cheatgui.h << 'EOF'
           #pragma once
           class CCheatGUI {
